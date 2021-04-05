@@ -1,257 +1,346 @@
 const mySwiper = new Swiper('.swiper-container', {
-	loop: true,
+    loop: true,
 
-	// Navigation arrows
-	navigation: {
-		nextEl: '.slider-button-next',
-		prevEl: '.slider-button-prev',
-	},
+    // Navigation arrows
+    navigation: {
+        nextEl: '.slider-button-next',
+        prevEl: '.slider-button-prev',
+    },
 });
 
 
-let buttonCard = document.querySelector('.button-cart');
-let modalCard = document.querySelector('#modal-cart');
-let modalClose = document.querySelector('.modal-close');
-let topLink = document.querySelector('.top-link');
-let buttonMore = document.querySelector('.more');
-let navigationItem = document.querySelectorAll('.navigation-link');
-let longGoodsList = document.querySelector('.long-goods-list');
-let buttonAccess = document.querySelector('.access');
-let buttonColthing = document.querySelector('.colthing');
-let cartTableGoods = document.querySelector('.cart-table__goods');
-let cardTableTotal = document.querySelector('.card-table__total');
-let cartCount = document.querySelector('.cart-count');
-let cartClear = document.querySelector('.cart-clear');
-let itemCount = 0;
-let sumItemCount = 0;
 
+// cart
 
-let getGoods = async function () { 
-
-	let result = await fetch('db/db.json');
-	if(!result.ok){
-		throw 'Ошибочка вышла ։' + result.status;
-	}
-	return await result.json();
+const buttonCart = document.querySelector('.button-cart');
+const modalCart = document.querySelector('#modal-cart');
+const openModal = function(){
+    cart.renderCart();
+   
+    modalCart.classList.add('show');
 };
 
-let cart = {
-	cartGoods : [],
-	renderCard(){
-		cartTableGoods.textContent = '';
-		this.cartGoods.forEach(({ id, name, price,count }) => {
-			let trGoods = document.createElement('tr');
-			trGoods.className = 'cart-item';
-			trGoods.dataset.id = id;
+const closeModal = function(){
+    modalCart.classList.remove('show')
+    
+};
+modalCart.addEventListener('click', function(){
+    if(event.target.classList.contains('overlay')||event.target.classList.contains('modal-close')){
+        closeModal();
+    }
+});
 
-			trGoods.innerHTML = `
-				<td>${name}</td>
-				<td>${price}$</td>
-				<td><button class="cart-btn-minus" data-id="${id}">-</button></td>
-				<td>${count}</td>
-				<td><button class="cart-btn-plus" data-id="${id}">+</button></td>
-				<td>${price*count}$</td>
-				<td><button class="cart-btn-delete" data-id="${id}">x</button></td>
-			`;
-			cartTableGoods.append(trGoods);
-		});
 
-		let totalGoods = this.cartGoods.reduce((sum,item) => {
-			return sum + (item.price * item.count);
-		}, 0);
+buttonCart.addEventListener('click', openModal);
 
-		cardTableTotal.textContent = totalGoods + '$';
-	},
-	deleteGood(id){
-		this.cartGoods = this.cartGoods.filter(item => id !== item.id);
-		this.renderCard();
-		
-	},
-	minusGood(id){
-		for(let item of this.cartGoods){
-			if(item.id === id){
-				if(item.count <= 1){
-					this.deleteGood(id);
-				}else{
-					item.count--;
-				}
-				break;
-			}
-		}
-		this.renderCard();
-	},
-	plusGood(id){
-		for(let item of this.cartGoods){
-			if(item.id === id){
-				item.count++;
-				break;
-			}
-		}
-		this.renderCard();
-	},
-	addCartGoods(id){
-		let goodItem = this.cartGoods.find(item => item.id === id);
-		if(goodItem){
-			this.plusGood(id);
-		}else{
-			getGoods()
-				.then(data => data.find(item => item.id === id))
-				.then(({ id, name, price}) => {
-					this.cartGoods.push({
-						id,
-						name,
-						price,
-						count:1
-					});
-				});
-		}
-	},
+
+// scroll smooth
+
+
+// {
+//     const scrollLink = document.querySelector('a.scroll-link');
+
+//     console.log(scrollLink);
+//     for(let i = 0; i < scrollLink.length; i++){
+//         scrollLink[i].addEventListener('click', function(event){
+//             event.preventDefault();
+//             const id = scrollLink[i].getAttribute('href');
+//             document.querySelector(id).scrollIntoView({
+//                 behavior: 'smooth',
+//                 block: 'start',
+//             })
+//         });
+//     }	
+// }
+
+
+// Goods
+
+const more = document.querySelector('.more');
+const navigationLink = document.querySelectorAll('.navigation-links');
+const longGoodsList = document.querySelector('.long-goods-list');
+const allfill = document.querySelector('.allfill')
+
+const getGoods = async function(){
+    const result = await fetch('db/db.json');
+    if(!result.ok){
+        throw 'error' + result.status;
+    } 
+    return await result.json();
 }
 
-document.body.addEventListener('click', event => {
-	let addToCart = event.target.closest('.add-to-cart');
-	if(addToCart){
-		cart.addCartGoods(addToCart.dataset.id);
-		itemCount += 1;
-		cartCount.textContent = itemCount;
-	}
+getGoods().then(function(data){
+    // console.log(data); 
 });
-
-
-cartTableGoods.addEventListener('click' , event => {
-	let target = event.target;
-	if(target.classList.contains('cart-btn-delete')){
-		cart.cartGoods.forEach(({id,count}) => {
-			if(target.dataset.id === id){
-				itemCount -= count;
-				cartCount.textContent = itemCount;
-				if(itemCount === 0){
-				cartCount.textContent = '';
-				}
-			}
-		})
-		cart.deleteGood(target.dataset.id);
-
-	}
-	if(target.classList.contains('cart-btn-plus')){
-		cart.plusGood(target.dataset.id);
-		itemCount++;
-		cartCount.textContent = itemCount;
-	}
-	if(target.classList.contains('cart-btn-minus')){
-		cart.minusGood(target.dataset.id);
-		itemCount--;
-		cartCount.textContent = itemCount;
-		if(itemCount === 0){
-			itemCount = 0;
-			cartCount.textContent = '';
-		}
-	}
+/* second variant
+fetch('db/db.json').then(function(response){
+    return response.json();
+}).then(function(data){
+    console.log(data);
 });
+*/
 
-cartClear.addEventListener('click',() =>{
-	cart.cartGoods = [];
-	cart.renderCard();
-	itemCount = 0;
-	cartCount.textContent = '';
-});
+const createCard = function(objCard){
+    const card = document.createElement('div');
+    card.className = 'col-lg-3 col-sm-6';
+    card.innerHTML = `
+    <div class="goods-card">
+    ${objCard.label ? `<span class="label">${objCard.label}</span>`: ''}
+    
+    <img src="db/${objCard.img}" alt="${objCard.name}" class="goods-image">
+    <h3 class="goods-title">${objCard.name}</h3>
+    <p class="goods-description">${objCard.description}</p>
+    <button class="button goods-card-btn add-to-cart" data-id="${objCard.id}">
+        <span class="button-price">$${objCard.price}</span>
+    </button>
+    </div>
+    `;
+    return card;
+}
 
-buttonCard.addEventListener('click',function () { 
-	modalCard.classList.add('show');
-	cart.renderCard();
-	modalCard.addEventListener('click',function (event) { 
-		let target = event.target;
-		if(target.tagName === 'DIV'){
-			modalCard.classList.remove('show');
-		}
-	});
-});
-modalClose.addEventListener('click',function () { 
-	modalCard.classList.remove('show');
-});
+const renderCards = function(data){
+    longGoodsList.textContent = '';
 
-
-
-topLink.addEventListener('click',event => { 
-	event.preventDefault();
-	let id = topLink.getAttribute('href');
-	document.querySelector(id).scrollIntoView({
-		behavior:'smooth',
-		block:'start'
-	});
-});
-
-
-
-let createCard = function (objCard) { 
-
-	let card = document.createElement('div');
-	card.className = 'col-lg-3 col-sm-6';
-
-	card.innerHTML = `
-	<div class="goods-card">
-	${objCard.label ? `<span class="label">${objCard.label}</span>` : ``}
-	<img src="/db/${objCard.img}" alt="image: ${objCard.name}" class="goods-image">
-	<h3 class="goods-title">${objCard.name}</h3>
-	<p class="goods-description">${objCard.description}</p>
-	<button class="button goods-card-btn add-to-cart" data-id="${objCard.id}">
-	<span class="button-price">$${objCard.price}</span>
-	</button>
-	</div>
-	`;
-	
-	return card;
+    const cards = data.map(createCard);
+    longGoodsList.append(...cards);
+    document.body.classList.add('show-goods');
 };
 
-let renderCards = function (data) { 
-	longGoodsList.textContent = '';
-	let cards = data.map(createCard);
-	longGoodsList.append(...cards);
-	document.body.classList.add('show-goods');
+
+more.addEventListener('click', function(event){
+    event.preventDefault();
+    getGoods().then(renderCards);
+    
+});
+
+
+
+
+const filterCards = function(field, value){
+    getGoods().then(function(data){
+        const filteredGoods = data.filter(function(good){
+            return good[field] === value;
+        });
+        return filteredGoods;
+    }).then(renderCards);
 };
 
-buttonMore.addEventListener('click',event => {
-	event.preventDefault();
-	let id = topLink.getAttribute('href');
-	document.querySelector(id).scrollIntoView({
-		behavior:'smooth',
-		block:'start'
-	});
-	getGoods().then(renderCards);
-});
-
-let filterCards = function (filed,value) { 
-	getGoods()
-		.then(data => data.filter(good => good[filed] === value))
-		.then(renderCards)
+const filterCardss = function(field1, value1, field2, value2){
+    getGoods().then(function(data){
+        const filteredGoods = data.filter(function(good){
+            return good[field1] === value1 || good[field2] === value2;
+        });
+        return filteredGoods;
+    }).then(renderCards);
 };
 
-navigationItem.forEach(function (link) { 
-	link.addEventListener('click',event => { 
-		event.preventDefault();
-		let field = link.dataset.field;
-		let value = link.textContent;
-		if(!link.dataset.field){
-			getGoods().then(renderCards);
-		}else{
-			filterCards(field,value);
-		}
-	});
+const shoeses = document.querySelector('.shoeses');
+shoeses.addEventListener('click', function(event){
+    event.preventDefault();
+    filterCardss('category', 'Shoes', 'category', 'Clothing');
 });
 
-buttonAccess.addEventListener('click', () => {
-	filterCards('category','Accessories');
-	let id = topLink.getAttribute('href');
-	document.querySelector(id).scrollIntoView({
-		behavior:'smooth',
-		block:'start'
-	});
+
+navigationLink.forEach(function(link){
+    link.addEventListener('click', function(event){
+        event.preventDefault();
+        const field = link.dataset.field;
+        const value = link.textContent;
+        filterCards(field, value);
+    })
 });
-buttonColthing.addEventListener('click',() => {
-	filterCards('category','Clothing');	
-	let id = topLink.getAttribute('href');
-	document.querySelector(id).scrollIntoView({
-		behavior:'smooth',
-		block:'start'
-	});
+const fashion = document.querySelector('.fashion');
+fashion.addEventListener('click', function(event){
+    event.preventDefault();
+    const field = 'category';
+    const value = 'Accessories';
+    filterCards(field, value);
 });
+
+
+allfill.addEventListener('click', function(event){
+    event.preventDefault();
+    getGoods().then(renderCards);
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+        });
+    });
+});
+
+const cartTableGoods = document.querySelector('.cart-table__goods');
+const cardTableTotal = document.querySelector('.card-table__total');
+
+
+
+const cart = {
+    
+    cartGoods: [],
+    
+    renderCart(){
+        cartTableGoods.textContent = '';
+        cart.cartGoods.forEach(function({id, name, price, count}){
+            const trGood = document.createElement('tr');
+            trGood.className = 'cart-item';
+            trGood.dataset.id = id;
+            trGood.innerHTML = `
+                <td>${name}</td>
+                <td>$${price}</td>
+                <td><button class="cart-btn-minus" data-id="${id}">-</button></td>
+                <td>${count}</td>
+                <td><button class="cart-btn-plus" data-id="${id}">+</button></td>
+                <td>${price*count}</td>
+                <td><button class="cart-btn-delete" data-id="${id}">x</button></td>
+            `;
+            cartTableGoods.append(trGood);
+        });
+        
+        const totalPrice = cart.cartGoods.reduce(function(sum, item){
+            return sum + item.price*item.count;
+        }, 0);
+
+        cardTableTotal.textContent = '$' + totalPrice;
+    },
+    deleteGood(id){
+        cart.cartGoods = cart.cartGoods.filter(function(item){
+            return id !== item.id;
+        });
+        cart.renderCart(); 
+        
+    },
+    minusGood(id){
+        for(const item of cart.cartGoods){
+            if(item.id == id){
+                if(item.count == 1){
+                    cart.deleteGood(id);
+                }else{
+                    item.count--;
+                }
+                
+                break;
+            }
+        }
+        cart.renderCart();
+        
+    },
+    plusGood(id){
+        for(const item of cart.cartGoods){
+            if(item.id == id){
+                item.count++;
+                break;
+            }
+        }
+        cart.renderCart(); 
+        
+    },
+    addCartGoods(id){
+        const goodItem = cart.cartGoods.find(function(item){
+            return item.id === id;
+        });
+        
+        // console.log(goodItem);
+        
+        if(goodItem){
+            cart.plusGood(id);
+           
+        } else{
+            getGoods()
+                .then(data => data.find(item => item.id == id))
+                .then(({id, price, name}) => {
+                    cart.cartGoods.push({
+                        id,
+                        name,
+                        price,
+                        count: 1
+                    });
+                    cart.updateCart();
+                });
+                
+        };
+    },
+    updateCart(){
+        
+        const totalPrice = cart.cartGoods.reduce(function(sum, item){
+            return sum + item.count;
+        }, 0);
+        if(!totalPrice){
+            document.querySelector('.cart-count').innerHTML = "";
+        }
+        else document.querySelector('.cart-count').innerHTML = `${totalPrice}`;
+    },
+
+}
+cart.updateCart();
+document.body.addEventListener('click', function(event){
+    const addToCart = event.target.closest('.add-to-cart');
+    if(addToCart){
+        cart.addCartGoods(addToCart.dataset.id);
+        cart.updateCart();
+    }
+});
+
+document.body.addEventListener('click', function(){
+    // console.log(cart.cartGoods.length);
+    cart.updateCart();
+})
+
+
+cartTableGoods.addEventListener('click', function(event){
+    if(event.target.classList.contains('cart-btn-delete')){
+        cart.deleteGood(event.target.dataset.id);
+    };
+    if(event.target.classList.contains('cart-btn-minus')){
+        cart.minusGood(event.target.dataset.id);
+    };
+    if(event.target.classList.contains('cart-btn-plus')){
+        cart.plusGood(event.target.dataset.id);
+    };
+});
+
+
+const clearCart = document.querySelector('.cart-clear');
+
+
+
+clearCart.addEventListener('click', function(event){
+    event.preventDefault();
+    cart.cartGoods.length = 0; //[]
+    cart.renderCart();
+});
+
+
+const modalForm = document.querySelector('.modal-form');
+
+const postData = dataUser => fetch('server.php',{
+    method: 'POST',
+    body: dataUser,
+});
+
+modalForm.addEventListener('submit', event => {
+    event.preventDefault();
+
+    const formData = new FormData(modalForm);
+    formData.append('cartGoods', JSON.stringify(cart.cartGoods));
+    postData(formData)
+        .then(response =>{
+            if(!response.ok){
+                throw new Error(response.status);
+            }
+            alert('Your book was finished successfully!');
+        })
+        .catch(err => {
+            alert('There was an error, try it later!');
+            console.error(err);
+        })
+        .finally(() => {
+            closeModal();
+            modalForm.reset();
+            cart.cartGoods.length = 0;
+            cart.updateCart();
+        })
+})
